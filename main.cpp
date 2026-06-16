@@ -2,6 +2,7 @@
 #include <queue>
 #include <cstdlib>
 #include <vector>
+#include <iomanip>
 using namespace std;
 
 // In general: num = rand() % (how many numbers included in range) + (lowest number in the range)
@@ -65,7 +66,7 @@ void newGame(){
     game.level = 1;
 
     player.hp = 30;
-    player.gold = 50;
+    player.gold = 0;
 
     enemy.hp = 20;
     
@@ -79,7 +80,51 @@ void newGame(){
     }
 }
 
-string generateCard(int range, int lowest, int specialEffectChance){
+void displayCard(string card){
+    char cardType = card[0];
+    char cardEffect = card[1];
+    string cardDamage = "";
+
+    for (int i = 2; i < card.length(); i ++){
+        cardDamage += card[i];
+    }
+
+    cout << setw(3) << left << cardDamage << "-----+\n";
+    switch(cardType){
+        case 'r':
+            cout << "|   _   |\n";
+            cout << "| _( )_ |\n";
+            cout << "|(_   _)|\n";
+            cout << "|  (_)  |\n";
+            cout << "|       |\n";
+            break;
+        case 'p':
+            cout << "| _____ |\n";
+            cout << "||     ||\n";
+            cout << "||     ||\n";
+            cout << "||_____||\n";
+            cout << "|       |\n";
+            break;
+        case 's':
+            cout << "|       |\n";
+            cout << "|  \\ /  |\n";
+            cout << "|   X   |\n";
+            cout << "|  / \\  |\n";
+            cout << "|       |\n";
+            break;
+    }
+
+    switch (cardEffect){
+        case 'h':
+            cout << "HEAL ---+\n";
+            break;
+        case 'n':
+            cout << "+-------+\n";
+            break;
+    }
+}
+
+string generateCard(int range, int startingValue, int specialEffectChance){
     srand(time(0));
 
     string card = "";
@@ -98,12 +143,12 @@ string generateCard(int range, int lowest, int specialEffectChance){
     }
 
     if(rand() % 100 < specialEffectChance){
-        card += "s"; // s for Special (to be replaced with actual special letters)
+        card += "h"; // s for Special
     } else {
         card += "n"; // n for None (no special effects)
     }
 
-    int damage = rand() % range + lowest;
+    int damage = rand() % range + startingValue;
     card += to_string(damage);
     return card;
 }
