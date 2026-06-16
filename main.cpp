@@ -9,7 +9,7 @@ using namespace std;
 
 
 int startingMenu();
-void newGame();
+void generateNewGame();
 void displayCard(string card, char color = 'w');
 void clearScreen();
 string generateCard(int range, int lowest, int specialEffectChance = 0);
@@ -32,7 +32,8 @@ int main(){
     while(true){
         switch(startingMenu()){
             case 1:
-                newGame();
+                clearScreen();
+                generateNewGame();
                 break;
             case 2:
                 cout << "Loading game..." << endl;
@@ -43,11 +44,14 @@ int main(){
                 return 0;
             default:
                 cout << "Invalid choice. Please try again." << endl;
+                clearScreen();
                 continue;
         }
 
         clearScreen();
+        break;
     }
+
 
     return 0;
 }
@@ -73,7 +77,7 @@ void clearScreen(){
     #endif
 }
 
-void newGame(){
+void generateNewGame(){
     game.score = 0;
     game.level = 1;
 
