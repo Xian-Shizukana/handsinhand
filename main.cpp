@@ -10,7 +10,8 @@ using namespace std;
 
 int startingMenu();
 void newGame();
-void displayCard(string card);
+void displayCard(string card, char color = 'w');
+void clearScreen();
 string generateCard(int range, int lowest, int specialEffectChance = 0);
 
 struct entityInfo{
@@ -44,6 +45,8 @@ int main(){
                 cout << "Invalid choice. Please try again." << endl;
                 continue;
         }
+
+        clearScreen();
     }
 
     return 0;
@@ -59,6 +62,15 @@ int startingMenu(){
     cin >> choice;
 
     return choice;
+}
+
+void clearScreen(){
+    // If the OS is Windows, use cls, else use clear.
+    #ifdef _WIN32
+        system("cls");
+    #else
+        system("clear");
+    #endif
 }
 
 void newGame(){
@@ -80,13 +92,27 @@ void newGame(){
     }
 }
 
-void displayCard(string card){
+void displayCard(string card, char color){
+
+    // For printing out the card
+
     char cardType = card[0];
     char cardEffect = card[1];
     string cardDamage = "";
 
     for (int i = 2; i < card.length(); i ++){
         cardDamage += card[i];
+    }
+
+    switch (color){
+        case 'w':
+            cout << "\033[37m";
+        case 'r':
+            cout << "\033[31m";
+        case 'g':
+            cout << "\033[32m";
+        case 'b':
+            cout << "\033[34m";
     }
 
     cout << setw(3) << left << cardDamage << "-----+\n";
@@ -122,9 +148,14 @@ void displayCard(string card){
             cout << "+-------+\n";
             break;
     }
+
+    cout << "\033[0m";
 }
 
 string generateCard(int range, int startingValue, int specialEffectChance){
+    // Generates a string containing the cards' type (rock, paper, or scissors),
+    // if it's a heal card, and its damage/heal points
+
     srand(time(0));
 
     string card = "";
@@ -143,9 +174,9 @@ string generateCard(int range, int startingValue, int specialEffectChance){
     }
 
     if(rand() % 100 < specialEffectChance){
-        card += "h"; // s for Special
+        card += "h"; // Heals
     } else {
-        card += "n"; // n for None (no special effects)
+        card += "n"; // No effect
     }
 
     int damage = rand() % range + startingValue;
