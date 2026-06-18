@@ -12,6 +12,11 @@ int startingMenu();
 void generateNewGame();
 void displayCard(string card, char color = 'w');
 void clearScreen();
+void shoppingPhase();
+void pickingPhase();
+void arrangePhase();
+void battlePhase();
+bool validateLoadFile();
 string generateCard(int range, int lowest, int specialEffectChance = 0);
 
 struct entityInfo{
@@ -28,6 +33,7 @@ struct gameInfo{
 } game;
 
 int main(){
+    bool goToShop = false;
 
     while(true){
         switch(startingMenu()){
@@ -36,8 +42,7 @@ int main(){
                 generateNewGame();
                 break;
             case 2:
-                cout << "Loading game..." << endl;
-                // Code to load a game goes here
+                if (validateLoadFile) goToShop = true;
                 break;
             case 3:
                 cout << "Exiting the game. Goodbye!" << endl;
@@ -50,6 +55,19 @@ int main(){
 
         clearScreen();
         break;
+    }
+
+    while(true){
+        switch(goToShop){
+            case false:
+                pickingPhase();
+                arrangingPhase();
+                battlePhase();
+            case true:
+                shoppingPhase();
+                goToShop = false;
+                break;
+        }
     }
 
 
