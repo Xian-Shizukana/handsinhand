@@ -14,6 +14,8 @@ void displayCard(string card, char color = 'w');
 void clearScreen();
 void shoppingPhase();
 void pickingPhase();
+void listDeck();
+void pressToContinue();
 void arrangingPhase();
 void battlingPhase();
 bool validateLoadFile();
@@ -33,6 +35,8 @@ struct gameInfo{
 } game;
 
 int main(){
+
+    srand(time(0));
     bool skipToShop = false;
 
     while(true){
@@ -42,7 +46,7 @@ int main(){
                 generateNewGame();
                 break;
             case 2:
-                if (validateLoadFile) skipToShop = true;
+                // if (validateLoadFile()) skipToShop = true;
                 break;
             case 3:
                 cout << "Exiting the game. Goodbye!" << endl;
@@ -61,10 +65,11 @@ int main(){
         switch(skipToShop){
             case false:
                 pickingPhase();
-                arrangingPhase();
-                battlingPhase();
+                cout << "Picking phase done.";
+                // arrangingPhase();
+                // battlingPhase();
             case true:
-                shoppingPhase();
+                // shoppingPhase();
                 skipToShop = false;
                 break;
         }
@@ -84,6 +89,101 @@ int startingMenu(){
     cin >> choice;
 
     return choice;
+}
+
+void listDeck(){
+    int counter = 0;
+    for(string card : player.deck){
+        string cardStats = to_string(counter) + " - ";
+        string cardDamage;
+        char cardType = card[0];
+        char cardEffect = card[1];
+
+        switch(cardType){
+            case 'r':
+                cardStats += "Rock - ";
+                break;
+            case 'p':
+                cardStats += "Paper - ";
+                break;
+            case 's':
+                cardStats += "Scissors - ";
+                break;
+        }
+
+        for (int i = 2; i < card.length(); i ++){
+            cardDamage += card[i];
+        }
+        cardStats += cardDamage + " Damage ";
+
+        switch(cardEffect){
+            case 'n':
+                cardStats += "\n";
+                break;
+            case 'h':
+                cardStats += "(Healing)\n";
+                break;
+        }
+
+        cout << cardStats;
+        counter += 1;
+    }
+}
+
+void pickingPhase(){
+    vector<int> counter;
+    int choice;
+    bool alreadyChosen;
+
+    while(counter.size() < 5){
+        alreadyChosen = false;
+        clearScreen();
+        listDeck();
+
+        cout << "-----------------------------\n";
+        cout << "Choose 5 cards from your deck (Current Hand Size: " << counter.size() << "/5): ";
+
+        cin >> choice;
+
+        // Shows an error if the choice isn't a number or outside of the
+        // deck range.
+        if (cin.fail() || choice < 0 || choice >= size(player.deck)){
+            // cin.clear() fixes the error state of cin
+            cin.clear();
+            cout << "Invalid input.\n";
+            pressToContinue();
+            continue;
+        }
+
+        // If card is already chosen, throw an error
+        for (int c : counter){
+            if (c == choice){
+                alreadyChosen = true;
+                break;
+            }
+        }
+        if (alreadyChosen) {
+            cout << "Already chosen.\n";
+            pressToContinue();
+            continue;
+        } else {
+            // Add the card into the player's hand, and put
+            // the card's index into the counter.
+            player.hand[counter.size()] = player.deck[choice];
+            displayCard(player.hand[counter.size()], 'b');
+            counter.push_back(choice);
+            pressToContinue();
+        }
+    }
+}
+
+void pressToContinue(){
+    cout <<"Press any key to continue.";
+
+    // Flushes out the value in cin in order for get to ask for a
+    // new value instead of getting the leftovers from cin.
+    cin.ignore(1000, '\n');
+    cin.get();
 }
 
 void clearScreen(){
@@ -129,12 +229,16 @@ void displayCard(string card, char color){
     switch (color){
         case 'w':
             cout << "\033[37m";
+            break;
         case 'r':
             cout << "\033[31m";
+            break;
         case 'g':
             cout << "\033[32m";
+            break;
         case 'b':
             cout << "\033[34m";
+            break;
     }
 
     cout << setw(3) << left << cardDamage << "-----+\n";
@@ -177,8 +281,6 @@ void displayCard(string card, char color){
 string generateCard(int range, int startingValue, int specialEffectChance){
     // Generates a string containing the cards' type (rock, paper, or scissors),
     // if it's a heal card, and its damage/heal points
-
-    srand(time(0));
 
     string card = "";
 
