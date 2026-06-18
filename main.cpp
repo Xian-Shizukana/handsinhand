@@ -14,8 +14,8 @@ void displayCard(string card, char color = 'w');
 void clearScreen();
 void shoppingPhase();
 void pickingPhase();
-void arrangePhase();
-void battlePhase();
+void arrangingPhase();
+void battlingPhase();
 bool validateLoadFile();
 string generateCard(int range, int lowest, int specialEffectChance = 0);
 
@@ -33,7 +33,7 @@ struct gameInfo{
 } game;
 
 int main(){
-    bool goToShop = false;
+    bool skipToShop = false;
 
     while(true){
         switch(startingMenu()){
@@ -42,7 +42,7 @@ int main(){
                 generateNewGame();
                 break;
             case 2:
-                if (validateLoadFile) goToShop = true;
+                if (validateLoadFile) skipToShop = true;
                 break;
             case 3:
                 cout << "Exiting the game. Goodbye!" << endl;
@@ -58,14 +58,14 @@ int main(){
     }
 
     while(true){
-        switch(goToShop){
+        switch(skipToShop){
             case false:
                 pickingPhase();
                 arrangingPhase();
-                battlePhase();
+                battlingPhase();
             case true:
                 shoppingPhase();
-                goToShop = false;
+                skipToShop = false;
                 break;
         }
     }
