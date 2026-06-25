@@ -14,7 +14,7 @@ void displayCard(string card, char color = 'w');
 void clearScreen();
 void shoppingPhase();
 void pickingPhase();
-void listDeck();
+void listCards(vector<int> alreadyChosenCards, char cardsToDisplay);
 void pressToContinue();
 void arrangingPhase();
 void battlingPhase();
@@ -24,7 +24,7 @@ string generateCard(int range, int lowest, int specialEffectChance = 0);
 struct entityInfo{
     int hp;
     int gold;
-    string hand[5];
+    vector<string> hand;
     vector<string> deck;
     queue<string> handOrder;
 } player, enemy;
@@ -65,10 +65,11 @@ int main(){
         switch(skipToShop){
             case false:
                 pickingPhase();
-                cout << "Picking phase done.";
-                // arrangingPhase();
+                cout << "Picking phase done.\n";
+                arrangingPhase();
                 // battlingPhase();
             case true:
+                // autoSave();
                 // shoppingPhase();
                 skipToShop = false;
                 break;
@@ -91,9 +92,28 @@ int startingMenu(){
     return choice;
 }
 
-void listDeck(){
+void listCards(vector<int> alreadyChosenCards, char cardsToList){
+    // Makes function reusable by allowing it to display
+    // either the player's deck or the player's hand.
+    vector<string> cards;
+    if(cardsToList == 'd'){
+        cards = player.deck;
+    } else {
+        cards = player.hand;
+    }
+
     int counter = 0;
-    for(string card : player.deck){
+
+    for(string card : cards){
+
+        cout << "\033[0m";
+        for (int chosen : alreadyChosenCards){
+            if (counter == chosen){
+                cout << "\033[31m";
+                break;
+            }
+        }
+
         string cardStats = to_string(counter) + " - ";
         string cardDamage;
         char cardType = card[0];
@@ -127,6 +147,7 @@ void listDeck(){
 
         cout << cardStats;
         counter += 1;
+        cout << "\033[0m";
     }
 }
 
@@ -138,7 +159,7 @@ void pickingPhase(){
     while(counter.size() < 5){
         alreadyChosen = false;
         clearScreen();
-        listDeck();
+        listCards(counter, 'd');
 
         cout << "-----------------------------\n";
         cout << "Choose 5 cards from your deck (Current Hand Size: " << counter.size() << "/5): ";
@@ -169,7 +190,58 @@ void pickingPhase(){
         } else {
             // Add the card into the player's hand, and put
             // the card's index into the counter.
-            player.hand[counter.size()] = player.deck[choice];
+            player.hand.push_back(player.deck[choice]) ;
+            displayCard(player.hand[counter.size()], 'b');
+            counter.push_back(choice);
+            pressToContinue();
+        }
+    }
+}
+
+void arrangingPhase(){
+    vector<int> counter;
+    int choice;
+    bool alreadyChosen;
+
+    while(counter.size() < 5){
+        alreadyChosen = false;
+        clearScreen();
+        listCards(counter, 'h');
+
+        cout << "-----------------------------\n";
+        cout << "Choose 5 cards from your hand ( Current Order: ";
+        for (int cardNum : counter){
+            cout << to_string(cardNum) << " ";
+        }
+        cout << ")\n";
+
+        cin >> choice;
+
+        // Shows an error if the choice isn't a number or outside of the
+        // deck range.
+        if (cin.fail() || choice < 0 || choice >= player.hand.size()){
+            // cin.clear() fixes the error state of cin
+            cin.clear();
+            cout << "Invalid input.\n";
+            pressToContinue();
+            continue;
+        }
+
+        // If card is already chosen, throw an error
+        for (int c : counter){
+            if (c == choice){
+                alreadyChosen = true;
+                break;
+            }
+        }
+        if (alreadyChosen) {
+            cout << "Already chosen.\n";
+            pressToContinue();
+            continue;
+        } else {
+            // Add the card into the player's queue, and put
+            // the card's index into the counter.
+            player.handOrder.push(player.hand[choice]);
             displayCard(player.hand[counter.size()], 'b');
             counter.push_back(choice);
             pressToContinue();
