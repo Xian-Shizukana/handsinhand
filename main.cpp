@@ -2,11 +2,11 @@
 #include <queue>
 #include <cstdlib>
 #include <vector>
+#include <algorithm>
 #include <iomanip>
 using namespace std;
 
 // In general: num = rand() % (how many numbers included in range) + (lowest number in the range)
-
 
 int startingMenu();
 void generateNewGame();
@@ -17,7 +17,9 @@ void pickingPhase();
 void listCards(vector<int> alreadyChosenCards, char cardsToDisplay);
 void pressToContinue();
 void arrangingPhase();
+void arrangeEnemyHand();
 void battlingPhase();
+char didPlayerCardWin(char pCardType, char eCardType);
 bool validateLoadFile();
 string generateCard(int range, int lowest, int specialEffectChance = 0);
 
@@ -66,8 +68,10 @@ int main(){
             case false:
                 pickingPhase();
                 cout << "Picking phase done.\n";
-                arrangingPhase();
-                // battlingPhase();
+                while (player.hp > 0 || enemy.hp > 0){
+                    arrangingPhase();
+                    battlingPhase();
+                }
             case true:
                 // autoSave();
                 // shoppingPhase();
@@ -203,6 +207,8 @@ void arrangingPhase(){
     int choice;
     bool alreadyChosen;
 
+    arrangeEnemyHand();
+
     while(counter.size() < 5){
         alreadyChosen = false;
         clearScreen();
@@ -249,6 +255,99 @@ void arrangingPhase(){
     }
 }
 
+void arrangeEnemyHand(){
+
+    // Clear existing queue
+    while(!enemy.handOrder.empty()){
+        enemy.handOrder.pop();
+    }
+
+    // Copy hand
+    vector<string> shuffledHand = enemy.hand;
+
+    // Shuffle it
+    random_shuffle(shuffledHand.begin(), shuffledHand.end());
+
+    // Put cards into queue
+    for(string card : shuffledHand){
+        enemy.handOrder.push(card);
+    }
+}
+
+void battlingPhase(){
+    while(!player.handOrder.empty() && !enemy.handOrder.empty() && player.hp > 0 && enemy.hp > 0){
+
+        string playerCard = player.handOrder.front();
+        string enemyCard = enemy.handOrder.front();
+
+        // stoi and substr gets the damage value from the cards 
+        // and turns them into an integer.
+        int playerCardVal = stoi(playerCard.substr(2));
+        int enemyCardVal = stoi(enemyCard.substr(2));
+
+        player.handOrder.pop();
+        enemy.handOrder.pop();
+
+        displayCard(playerCard, 'b');
+        cout << "\nVS\n";
+        displayCard(enemyCard, 'r');
+
+        switch(didPlayerCardWin(playerCard[0], enemyCard[0])){
+            case 'w':
+                // Used switch case incase more effects get added
+                switch(playerCard[1]){
+                    case 'h':
+                        player.hp += playerCardVal;
+                        cout << "Player is healed for " << to_string(playerCardVal) << " HP!\n";
+                        break;
+                    case 'n':
+                        enemy.hp -= playerCardVal;
+                        cout << "Enemy is damaged for " << to_string(playerCardVal) << " HP!\n";
+                        break;
+                }
+                break;
+            case 'l':
+                // Used switch case incase more effects get added
+                switch(enemyCard[1]){
+                    case 'h':
+                        enemy.hp += enemyCardVal;
+                        cout << "Enemy is healed for " << to_string(enemyCardVal) << " HP!\n";
+                        break;
+                    case 'n':
+                        player.hp -= enemyCardVal;
+                        cout << "Player is damaged for " << to_string(enemyCardVal) << " HP!\n";
+                        break;
+                }
+                break;
+            case 'd':
+                cout << "It's a draw!\n";
+                break;
+        }
+
+        pressToContinue();
+        clearScreen();
+    }
+}
+
+char didPlayerCardWin(char pCardType, char eCardType){
+    if(pCardType == eCardType){
+        return 'd';
+    }
+
+    // If the condition is true, return the first value
+    // else, return the second value.
+    switch(pCardType){
+        case 'r':
+            return (eCardType == 's') ? 'w' : 'l';
+        case 'p':
+            return (eCardType == 'r') ? 'w' : 'l';
+        case 's':
+            return (eCardType == 'p') ? 'w' : 'l';
+        default:
+            return 'd';
+    }
+}
+
 void pressToContinue(){
     cout <<"Press any key to continue.";
 
@@ -282,7 +381,7 @@ void generateNewGame(){
         pCard = generateCard(2, 5); 
         eCard = generateCard(2, 5);
         player.deck.push_back(pCard);
-        enemy.deck.push_back(eCard);
+        enemy.hand.push_back(eCard);
     }
 }
 
@@ -292,11 +391,7 @@ void displayCard(string card, char color){
 
     char cardType = card[0];
     char cardEffect = card[1];
-    string cardDamage = "";
-
-    for (int i = 2; i < card.length(); i ++){
-        cardDamage += card[i];
-    }
+    string cardDamage = card.substr(2);
 
     switch (color){
         case 'w':
