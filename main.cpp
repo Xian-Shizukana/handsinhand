@@ -102,7 +102,7 @@ int main(){
                         eraseSaveFile();
                         break;
                     } else {
-                        goldReward = 30 + game.level * 5 + ((game.level * game.level) / 4);
+                        goldReward = 50 + game.level * 5 + ((game.level * game.level) / 4);
                         player.gold += goldReward;
                         cout << "You won!\n";
                         cout << "Reward: " << goldReward << " Gold" << endl;
@@ -242,7 +242,7 @@ void generateNewEnemy(){
     enemy.hand.clear();
 
     // Scale HP
-    enemy.maxHp = 20 + game.level * 8;
+    enemy.maxHp = 20 + game.level * 6;
     enemy.hp = enemy.maxHp;
 
     // Generate 5 cards
