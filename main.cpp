@@ -41,7 +41,7 @@ struct entityInfo{
 struct gameInfo{
     int score;
     int level;
-    int hpUpgradesBought = 0;
+    int hpItemsBought;
 } game;
 
 int main(){
@@ -94,8 +94,11 @@ int main(){
 
                     if(player.hp <= 0){
                         clearScreen();
+
                         cout << "GAME OVER.\n";
+                        cout << "Score: " << game.score << endl;
                         pressToContinue();
+
                         isPlayerAlive = false;
                         eraseSaveFile();
                         break;
@@ -103,13 +106,16 @@ int main(){
                         goldReward = 30 + game.level * 5 + ((game.level * game.level) / 4);
                         player.gold += goldReward;
                         cout << "You won!\n";
-                        cout << "Reward: " << goldReward << endl;
+                        cout << "Reward: " << goldReward << " Gold" << endl;
 
                         // Clears out player hand and hand order
                         player.hand.clear();
                         while(!player.handOrder.empty()){
                             player.handOrder.pop();
                         }
+
+                        game.level += 1;
+                        game.score += 100 + (game.level * 25) + (game.level * game.level * 10);
 
                         pressToContinue();
                         clearScreen();
@@ -118,6 +124,7 @@ int main(){
                 case true:
                     autoSave();
                     shoppingPhase();
+
                     skipToShop = false;
                     generateNewEnemy();
                     break;
@@ -146,7 +153,7 @@ bool validateLoadFile(){
         // Game data
         saveFile >> game.score;
         saveFile >> game.level;
-        saveFile >> game.hpUpgradesBought;
+        saveFile >> game.hpItemsBought;
 
         // Player data
         saveFile >> player.maxHp;
@@ -198,7 +205,7 @@ void autoSave(){
         // Game data
         saveFile << game.score << '\n';
         saveFile << game.level << '\n';
-        saveFile << game.hpUpgradesBought << '\n';
+        saveFile << game.hpItemsBought << '\n';
 
         // Player data
         saveFile << player.maxHp << '\n';
@@ -547,6 +554,7 @@ void clearScreen(){
 void generateNewGame(){
     game.score = 0;
     game.level = 1;
+    game.hpItemsBought = 0;
 
     player.maxHp = 30;
     player.hp = 30;
@@ -570,11 +578,11 @@ void shoppingPhase(){
     vector<int> alreadyPurchased;
     bool alreadyChosen;
     int cardPrice = 20 + (game.level * 4) + ((game.level / 2) * (game.level / 2));
-    int hpPrice = 50 + (game.hpUpgradesBought * 25) + (game.hpUpgradesBought * game.hpUpgradesBought * 10);
+    int hpPrice = 50 + (game.hpItemsBought * 25) + (game.hpItemsBought * game.hpItemsBought * 10);
     int choice;
     
     for(int i = 0; i < 5; i++){
-        shopItems.push_back(generateCard(2 + game.level / 3, 5 + game.level / 2, min(int(game.level * 1.5) , 35) ));
+        shopItems.push_back(generateCard(2 + game.level / 3, 6 + game.level / 2, min(int(game.level * 2) , 50) ));
     }
 
     while(true){
@@ -588,6 +596,7 @@ void shoppingPhase(){
         listCards(alreadyPurchased, shopItems);
         cout << "===================\n";
         cout << "5 - HP +10 = " << to_string(hpPrice) << endl;
+        cout << "6 - Full Heal = " << to_string(hpPrice) << endl;
         cout << "===================\n";
         cout << "-1 = Exit Shop\n";
         cout << "===================\n";
@@ -622,19 +631,35 @@ void shoppingPhase(){
             if(player.gold >= cardPrice){
                 player.deck.push_back(shopItems[choice]);
                 player.gold -= cardPrice;
+
                 displayCard(shopItems[choice], 'b');
                 cout << "Card purchased!\n";
+
+                alreadyPurchased.push_back(choice);
                 pressToContinue();
+            } else {
+                cout << "Not enough gold!\n";
+                pressToContinue();
+            }
+        } else if (choice == 5){
+            if(player.gold >= hpPrice){
+                player.maxHp += 10;
+                player.gold -= hpPrice;
+                game.hpItemsBought += 1;
+
+                cout << "Player HP is now " << to_string(player.hp) << "!\n";
+                pressToContinue();;
             } else {
                 cout << "Not enough gold!\n";
                 pressToContinue();
             }
         } else {
             if(player.gold >= hpPrice){
-                player.maxHp += 10;
+                player.hp - player.maxHp;
                 player.gold -= hpPrice;
-                game.hpUpgradesBought += 1;
-                cout << "Player HP is now " << to_string(player.hp) << "!\n";
+                game.hpItemsBought += 1;
+
+                cout << "Player is back at full health!";
                 pressToContinue();;
             } else {
                 cout << "Not enough gold!\n";
