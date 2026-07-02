@@ -9,8 +9,6 @@
 
 using namespace std;
 
-// In general: num = rand() % (how many numbers included in range) + (lowest number in the range)
-
 int startingMenu();
 void generateNewGame();
 void displayCard(string card, char color = 'w');
@@ -72,6 +70,7 @@ int main(){
                     return 0;
                 default:
                     cout << "Invalid choice. Please try again." << endl;
+                    pressToContinue();
                     clearScreen();
                     continue;
             }
