@@ -4,6 +4,8 @@
 #include <vector>
 #include <algorithm>
 #include <iomanip>
+#include <fstream>
+
 using namespace std;
 
 // In general: num = rand() % (how many numbers included in range) + (lowest number in the range)
@@ -19,6 +21,7 @@ void pressToContinue();
 void arrangingPhase();
 void arrangeEnemyHand();
 void battlingPhase();
+void autoSave();
 char didPlayerCardWin(char pCardType, char eCardType);
 bool validateLoadFile();
 string generateCard(int range, int lowest, int specialEffectChance = 0);
@@ -37,51 +40,93 @@ struct gameInfo{
 } game;
 
 int main(){
-
     srand(time(0));
     bool skipToShop = false;
+    bool isPlayerAlive;
 
     while(true){
-        switch(startingMenu()){
-            case 1:
-                clearScreen();
-                generateNewGame();
-                break;
-            case 2:
-                // if (validateLoadFile()) skipToShop = true;
-                break;
-            case 3:
-                cout << "Exiting the game. Goodbye!" << endl;
-                return 0;
-            default:
-                cout << "Invalid choice. Please try again." << endl;
-                clearScreen();
-                continue;
+        isPlayerAlive = true;
+
+        while(true){
+            clearScreen();
+            switch(startingMenu()){
+                case 1:
+                    clearScreen();
+                    generateNewGame();
+                    break;
+                case 2:
+                    // if (validateLoadFile()) skipToShop = true;
+                    break;
+                case 3:
+                    cout << "Exiting the game. Goodbye!" << endl;
+                    return 0;
+                default:
+                    cout << "Invalid choice. Please try again." << endl;
+                    clearScreen();
+                    continue;
+            }
+
+            clearScreen();
+            break;
         }
 
-        clearScreen();
-        break;
-    }
+        while(isPlayerAlive){
+            switch(skipToShop){
+                case false:
+                    pickingPhase();
+                    cout << "Picking phase done.\n";
+                    while (player.hp > 0 || enemy.hp > 0){
+                        arrangingPhase();
+                        battlingPhase();
+                    }
 
-    while(true){
-        switch(skipToShop){
-            case false:
-                pickingPhase();
-                cout << "Picking phase done.\n";
-                while (player.hp > 0 || enemy.hp > 0){
-                    arrangingPhase();
-                    battlingPhase();
-                }
-            case true:
-                // autoSave();
-                // shoppingPhase();
-                skipToShop = false;
-                break;
+                    if(player.hp > 0){
+                        cout << "GAME OVER.\n";
+                        pressToContinue();
+                        isPlayerAlive = false;
+                        break;
+                    }
+
+                case true:
+                    autoSave();
+                    // shoppingPhase();
+                    skipToShop = false;
+                    // generateNewEnemy();
+                    break;
+            }
         }
     }
-
 
     return 0;
+}
+
+void autoSave(){
+    ofstream saveFile;
+
+    saveFile.open("hihSave.txt");
+    
+    if(saveFile.is_open()){
+
+        // Game data
+        saveFile << game.score << '\n';
+        saveFile << game.level << '\n';
+
+        // Player data
+        saveFile << player.hp << '\n';
+        saveFile << player.gold << '\n';
+
+        saveFile << player.hand.size() << '\n';
+        for (string card : player.hand)
+            saveFile << card << '\n';
+
+        saveFile << player.deck.size() << '\n';
+        for (string card : player.deck)
+            saveFile << card << '\n';
+
+        saveFile.close();
+
+        cout << "Game saved successfully!\n";
+    }
 }
 
 int startingMenu(){
@@ -324,6 +369,8 @@ void battlingPhase(){
                 break;
         }
 
+        cout << "===================================================\n";
+        cout << "Player Health: " << to_string(player.hp) << " || Enemy Health: " << to_string(enemy.hp) << endl;
         pressToContinue();
         clearScreen();
     }
