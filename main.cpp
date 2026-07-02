@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <fstream>
+#include <filesystem>
 
 using namespace std;
 
@@ -22,11 +23,14 @@ void arrangingPhase();
 void arrangeEnemyHand();
 void battlingPhase();
 void autoSave();
+void eraseSaveFile();
 char didPlayerCardWin(char pCardType, char eCardType);
 bool validateLoadFile();
+void generateNewEnemy();
 string generateCard(int range, int lowest, int specialEffectChance = 0);
 
 struct entityInfo{
+    int maxHp;
     int hp;
     int gold;
     vector<string> hand;
@@ -37,6 +41,7 @@ struct entityInfo{
 struct gameInfo{
     int score;
     int level;
+    int hpUpgradesBought = 0;
 } game;
 
 int main(){
@@ -55,7 +60,12 @@ int main(){
                     generateNewGame();
                     break;
                 case 2:
-                    // if (validateLoadFile()) skipToShop = true;
+                    if (validateLoadFile()){
+                        skipToShop = true;
+                    } else {
+                        clearScreen();
+                        generateNewGame();
+                    }
                     break;
                 case 3:
                     cout << "Exiting the game. Goodbye!" << endl;
@@ -65,39 +75,117 @@ int main(){
                     clearScreen();
                     continue;
             }
-
             clearScreen();
             break;
         }
 
         while(isPlayerAlive){
+            int goldReward;
+
             switch(skipToShop){
                 case false:
                     pickingPhase();
-                    cout << "Picking phase done.\n";
-                    while (player.hp > 0 || enemy.hp > 0){
+                    clearScreen();
+
+                    while (player.hp > 0 && enemy.hp > 0){
                         arrangingPhase();
                         battlingPhase();
                     }
 
-                    if(player.hp > 0){
+                    if(player.hp <= 0){
+                        clearScreen();
                         cout << "GAME OVER.\n";
                         pressToContinue();
                         isPlayerAlive = false;
+                        eraseSaveFile();
                         break;
+                    } else {
+                        goldReward = 30 + game.level * 5 + ((game.level * game.level) / 4);
+                        player.gold += goldReward;
+                        cout << "You won!\n";
+                        cout << "Reward: " << goldReward << endl;
+
+                        // Clears out player hand and hand order
+                        player.hand.clear();
+                        while(!player.handOrder.empty()){
+                            player.handOrder.pop();
+                        }
+
+                        pressToContinue();
+                        clearScreen();
                     }
 
                 case true:
                     autoSave();
-                    // shoppingPhase();
+                    shoppingPhase();
                     skipToShop = false;
-                    // generateNewEnemy();
+                    generateNewEnemy();
                     break;
             }
         }
     }
 
     return 0;
+}
+
+void eraseSaveFile(){
+    // Removes save file if the player loses
+    
+    if(filesystem::exists("hihSave.txt")){
+        filesystem::remove("hihSave.txt");
+    }
+}
+
+bool validateLoadFile(){
+    ifstream saveFile;
+
+    saveFile.open("hihSave.txt");
+
+    if (saveFile.is_open()) {
+
+        // Game data
+        saveFile >> game.score;
+        saveFile >> game.level;
+        saveFile >> game.hpUpgradesBought;
+
+        // Player data
+        saveFile >> player.maxHp;
+        saveFile >> player.hp;
+        saveFile >> player.gold;
+
+        // Clears player hand
+        player.hand.clear();
+
+        int handSize;
+        saveFile >> handSize;
+
+        for (int i = 0; i < handSize; i++) {
+            string card;
+            saveFile >> card;
+            player.hand.push_back(card);
+        }
+
+        // Player deck
+        player.deck.clear();
+
+        int deckSize;
+        saveFile >> deckSize;
+
+        for (int i = 0; i < deckSize; i++) {
+            string card;
+            saveFile >> card;
+            player.deck.push_back(card);
+        }
+
+        saveFile.close();
+
+        cout << "Game loaded successfully!\n";
+        return true;
+    }
+    else {
+        cout << "No save file found.\n";
+        return false;
+    }
 }
 
 void autoSave(){
@@ -110,8 +198,10 @@ void autoSave(){
         // Game data
         saveFile << game.score << '\n';
         saveFile << game.level << '\n';
+        saveFile << game.hpUpgradesBought << '\n';
 
         // Player data
+        saveFile << player.maxHp << '\n';
         saveFile << player.hp << '\n';
         saveFile << player.gold << '\n';
 
@@ -141,19 +231,31 @@ int startingMenu(){
     return choice;
 }
 
-void listCards(vector<int> alreadyChosenCards, char cardsToList){
-    // Makes function reusable by allowing it to display
-    // either the player's deck or the player's hand.
-    vector<string> cards;
-    if(cardsToList == 'd'){
-        cards = player.deck;
-    } else {
-        cards = player.hand;
+void generateNewEnemy(){
+    // Clear previous enemy
+    enemy.hand.clear();
+
+    // Scale HP
+    enemy.maxHp = 20 + game.level * 8;
+    enemy.hp = enemy.maxHp;
+
+    // Generate 5 cards
+    for(int i = 0; i < 5; i++){
+        enemy.hand.push_back(
+            generateCard(
+                2 + game.level / 3,
+                5 + game.level / 2,
+                min(int(game.level * 1.5), 35)
+            )
+        );
     }
+}
+
+void listCards(vector<int> alreadyChosenCards, vector<string> cardsToList){
 
     int counter = 0;
 
-    for(string card : cards){
+    for(string card : cardsToList){
 
         cout << "\033[0m";
         for (int chosen : alreadyChosenCards){
@@ -187,14 +289,14 @@ void listCards(vector<int> alreadyChosenCards, char cardsToList){
 
         switch(cardEffect){
             case 'n':
-                cardStats += "\n";
+                cardStats += "";
                 break;
             case 'h':
-                cardStats += "(Healing)\n";
+                cardStats += "(Healing)";
                 break;
         }
 
-        cout << cardStats;
+        cout << cardStats << endl;
         counter += 1;
         cout << "\033[0m";
     }
@@ -208,7 +310,7 @@ void pickingPhase(){
     while(counter.size() < 5){
         alreadyChosen = false;
         clearScreen();
-        listCards(counter, 'd');
+        listCards(counter, player.deck);
 
         cout << "-----------------------------\n";
         cout << "Choose 5 cards from your deck (Current Hand Size: " << counter.size() << "/5): ";
@@ -257,7 +359,7 @@ void arrangingPhase(){
     while(counter.size() < 5){
         alreadyChosen = false;
         clearScreen();
-        listCards(counter, 'h');
+        listCards(counter, player.hand);
 
         cout << "-----------------------------\n";
         cout << "Choose 5 cards from your hand ( Current Order: ";
@@ -342,7 +444,7 @@ void battlingPhase(){
                 // Used switch case incase more effects get added
                 switch(playerCard[1]){
                     case 'h':
-                        player.hp += playerCardVal;
+                        player.hp = min(player.hp + playerCardVal, player.maxHp);
                         cout << "Player is healed for " << to_string(playerCardVal) << " HP!\n";
                         break;
                     case 'n':
@@ -365,12 +467,41 @@ void battlingPhase(){
                 }
                 break;
             case 'd':
-                cout << "It's a draw!\n";
+                // Whoever has the higher value wins
+                if(playerCardVal == enemyCardVal){
+                    cout << "It's a draw!\n";
+                } else if (playerCardVal > enemyCardVal){
+                    // Used switch case incase more effects get added
+                    switch(playerCard[1]){
+                        case 'h':
+                            player.hp = min(player.hp + playerCardVal, player.maxHp);
+                            cout << "Player is healed for " << to_string(playerCardVal) << " HP!\n";
+                            break;
+                        case 'n':
+                            enemy.hp -= playerCardVal;
+                            cout << "Enemy is damaged for " << to_string(playerCardVal) << " HP!\n";
+                            break;
+                    }
+                } else {
+                    // Used switch case incase more effects get added
+                    switch(enemyCard[1]){
+                        case 'h':
+                            enemy.hp += enemyCardVal;
+                            cout << "Enemy is healed for " << to_string(enemyCardVal) << " HP!\n";
+                            break;
+                        case 'n':
+                            player.hp -= enemyCardVal;
+                            cout << "Player is damaged for " << to_string(enemyCardVal) << " HP!\n";
+                            break;
+                    }
+                }
                 break;
         }
 
         cout << "===================================================\n";
-        cout << "Player Health: " << to_string(player.hp) << " || Enemy Health: " << to_string(enemy.hp) << endl;
+        cout << "Player Health: " << to_string(player.hp) << " / " << to_string(player.maxHp) << " || Enemy Health: " 
+        << to_string(enemy.hp) << " / " << to_string(enemy.maxHp) << endl;
+
         pressToContinue();
         clearScreen();
     }
@@ -417,9 +548,11 @@ void generateNewGame(){
     game.score = 0;
     game.level = 1;
 
+    player.maxHp = 30;
     player.hp = 30;
     player.gold = 0;
 
+    enemy.maxHp = 20;
     enemy.hp = 20;
     
     for(int i = 0; i < 6; i++){
@@ -432,9 +565,90 @@ void generateNewGame(){
     }
 }
 
+void shoppingPhase(){
+    vector<string> shopItems;
+    vector<int> alreadyPurchased;
+    bool alreadyChosen;
+    int cardPrice = 20 + (game.level * 4) + ((game.level / 2) * (game.level / 2));
+    int hpPrice = 50 + (game.hpUpgradesBought * 25) + (game.hpUpgradesBought * game.hpUpgradesBought * 10);
+    int choice;
+    
+    for(int i = 0; i < 5; i++){
+        shopItems.push_back(generateCard(2 + game.level / 3, 5 + game.level / 2, min(int(game.level * 1.5) , 35) ));
+    }
+
+    while(true){
+        alreadyChosen = false;
+        clearScreen();
+        cout << "WELCOME TO THE SHOP\n";
+        cout << "Gold: " << player.gold << endl;
+        cout << "===================\n";
+        cout << "ALL CARDS PRICE: " << to_string(cardPrice) << endl;
+        cout << "===================\n";
+        listCards(alreadyPurchased, shopItems);
+        cout << "===================\n";
+        cout << "5 - HP +10 = " << to_string(hpPrice) << endl;
+        cout << "===================\n";
+        cout << "-1 = Exit Shop\n";
+        cout << "===================\n";
+        cin >> choice;
+
+        // Shows an error if the choice isn't a number or outside of the
+        // deck range.
+        if (cin.fail() || choice < -1 || choice > 5){
+            // cin.clear() fixes the error state of cin
+            cin.clear();
+            cout << "Invalid input.\n";
+            pressToContinue();
+            continue;
+        }
+
+        // If card is already purchased, throw an error
+        for (int c : alreadyPurchased){
+            if (c == choice){
+                alreadyChosen = true;
+                break;
+            }
+        }
+        if (alreadyChosen) {
+            cout << "Already chosen.\n";
+            pressToContinue();
+            continue;
+        }
+
+        if(choice == -1){
+            return;
+        } else if (choice >= 0 && choice < 5){
+            if(player.gold >= cardPrice){
+                player.deck.push_back(shopItems[choice]);
+                player.gold -= cardPrice;
+                displayCard(shopItems[choice], 'b');
+                cout << "Card purchased!\n";
+                pressToContinue();
+            } else {
+                cout << "Not enough gold!\n";
+                pressToContinue();
+            }
+        } else {
+            if(player.gold >= hpPrice){
+                player.maxHp += 10;
+                player.gold -= hpPrice;
+                game.hpUpgradesBought += 1;
+                cout << "Player HP is now " << to_string(player.hp) << "!\n";
+                pressToContinue();;
+            } else {
+                cout << "Not enough gold!\n";
+                pressToContinue();
+            }
+        }
+
+    }
+
+}
+
 void displayCard(string card, char color){
 
-    // For printing out the card
+    // For printing out the card in ASCII format
 
     char cardType = card[0];
     char cardEffect = card[1];
