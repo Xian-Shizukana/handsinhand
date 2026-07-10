@@ -606,12 +606,13 @@ void shoppingPhase(){
         cout << "6 - Full Heal = " << to_string(hpPrice) << " Gold" << endl;
         cout << "=========================\n";
         cout << "-1 = Exit Shop\n";
+        cout << "-2 = Exit Game\n";
         cout << "=========================\n";
         cin >> choice;
 
         // Shows an error if the choice isn't a number or outside of the
         // deck range.
-        if (cin.fail() || choice < -1 || choice > 5){
+        if (cin.fail() || choice < -2 || choice > 5){
             // cin.clear() fixes the error state of cin
             cin.clear();
             cout << "Invalid input.\n";
@@ -632,7 +633,9 @@ void shoppingPhase(){
             continue;
         }
 
-        if(choice == -1){
+        if(choice == -2){
+            exit(0);
+        } else if (choice == -1){
             return;
         } else if (choice >= 0 && choice < 5){
             if(player.gold >= cardPrice){
