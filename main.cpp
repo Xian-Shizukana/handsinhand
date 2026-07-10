@@ -325,7 +325,7 @@ void pickingPhase(){
 
         // Shows an error if the choice isn't a number or outside of the
         // deck range.
-        if (cin.fail() || choice < 0 || choice >= size(player.deck)){
+        if (cin.fail() || choice < 0 || choice >= player.deck.size()){
             // cin.clear() fixes the error state of cin
             cin.clear();
             cout << "Invalid input.\n";
@@ -440,6 +440,9 @@ void battlingPhase(){
 
         player.handOrder.pop();
         enemy.handOrder.pop();
+
+        cout << "LEVEL: " << to_string(game.level) << " || SCORE: " << to_string(game.score) << endl;
+        cout << "======================================================" << endl;
 
         displayCard(playerCard, 'b');
         cout << "\nVS\n";
@@ -577,7 +580,7 @@ void shoppingPhase(){
     vector<int> alreadyPurchased;
     bool alreadyChosen;
     int cardPrice = 20 + (game.level * 4) + ((game.level / 2) * (game.level / 2));
-    int hpPrice = 50 + (game.hpItemsBought * 25) + (game.hpItemsBought * game.hpItemsBought * 10);
+    int hpPrice;
     int choice;
     
     for(int i = 0; i < 5; i++){
@@ -585,20 +588,25 @@ void shoppingPhase(){
     }
 
     while(true){
+        // Updates HP price every loop so the player
+        // cannot spam buy the upgrade at a low price.
+
+        hpPrice = 50 + (game.hpItemsBought * 25) + (game.hpItemsBought * game.hpItemsBought * 10);
+
         alreadyChosen = false;
         clearScreen();
         cout << "WELCOME TO THE SHOP\n";
-        cout << "Gold: " << player.gold << endl;
-        cout << "===================\n";
-        cout << "ALL CARDS PRICE: " << to_string(cardPrice) << endl;
-        cout << "===================\n";
+        cout << "Gold: " << player.gold << " Gold" << endl;
+        cout << "=========================\n";
+        cout << "ALL CARDS PRICE: " << to_string(cardPrice) << " Gold" << endl;
+        cout << "=========================\n";
         listCards(alreadyPurchased, shopItems);
-        cout << "===================\n";
-        cout << "5 - HP +10 = " << to_string(hpPrice) << endl;
-        cout << "6 - Full Heal = " << to_string(hpPrice) << endl;
-        cout << "===================\n";
+        cout << "=========================\n";
+        cout << "5 - Max HP +10 = " << to_string(hpPrice) << " Gold" << endl;
+        cout << "6 - Full Heal = " << to_string(hpPrice) << " Gold" << endl;
+        cout << "=========================\n";
         cout << "-1 = Exit Shop\n";
-        cout << "===================\n";
+        cout << "=========================\n";
         cin >> choice;
 
         // Shows an error if the choice isn't a number or outside of the
@@ -643,10 +651,11 @@ void shoppingPhase(){
         } else if (choice == 5){
             if(player.gold >= hpPrice){
                 player.maxHp += 10;
+                player.hp += 10;
                 player.gold -= hpPrice;
                 game.hpItemsBought += 1;
 
-                cout << "Player HP is now " << to_string(player.hp) << "!\n";
+                cout << "Player max HP is now " << to_string(player.hp) << "!\n";
                 pressToContinue();;
             } else {
                 cout << "Not enough gold!\n";
@@ -654,7 +663,7 @@ void shoppingPhase(){
             }
         } else {
             if(player.gold >= hpPrice){
-                player.hp - player.maxHp;
+                player.hp = player.maxHp;
                 player.gold -= hpPrice;
                 game.hpItemsBought += 1;
 
