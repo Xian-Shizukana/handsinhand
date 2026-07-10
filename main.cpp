@@ -88,6 +88,7 @@ int main(){
 
                     while (player.hp > 0 && enemy.hp > 0){
                         arrangingPhase();
+                        clearScreen();
                         battlingPhase();
                     }
 
@@ -104,6 +105,7 @@ int main(){
                     } else {
                         goldReward = 50 + game.level * 5 + ((game.level * game.level) / 4);
                         player.gold += goldReward;
+
                         cout << "You won!\n";
                         cout << "Reward: " << goldReward << " Gold" << endl;
 
@@ -251,7 +253,7 @@ void generateNewEnemy(){
             generateCard(
                 2 + game.level / 3,
                 5 + game.level / 2,
-                min(int(game.level * 1.5), 35)
+                min(int(game.level * 1.5), 50)
             )
         );
     }
@@ -288,9 +290,7 @@ void listCards(vector<int> alreadyChosenCards, vector<string> cardsToList){
                 break;
         }
 
-        for (int i = 2; i < card.length(); i ++){
-            cardDamage += card[i];
-        }
+        cardDamage = card.substr(2);
         cardStats += cardDamage + " Damage ";
 
         switch(cardEffect){
@@ -507,7 +507,7 @@ void battlingPhase(){
                 break;
         }
 
-        cout << "===================================================\n";
+        cout << "======================================================" << endl;
         cout << "Player Health: " << to_string(player.hp) << " / " << to_string(player.maxHp) << " || Enemy Health: " 
         << to_string(enemy.hp) << " / " << to_string(enemy.maxHp) << endl;
 
@@ -596,6 +596,7 @@ void shoppingPhase(){
         alreadyChosen = false;
         clearScreen();
         cout << "WELCOME TO THE SHOP\n";
+        cout << "HP: " << player.hp << " / " << player.maxHp << endl;
         cout << "Gold: " << player.gold << " Gold" << endl;
         cout << "=========================\n";
         cout << "ALL CARDS PRICE: " << to_string(cardPrice) << " Gold" << endl;
@@ -658,7 +659,7 @@ void shoppingPhase(){
                 player.gold -= hpPrice;
                 game.hpItemsBought += 1;
 
-                cout << "Player max HP is now " << to_string(player.hp) << "!\n";
+                cout << "Player max HP is now " << to_string(player.maxHp) << "!\n";
                 pressToContinue();;
             } else {
                 cout << "Not enough gold!\n";
