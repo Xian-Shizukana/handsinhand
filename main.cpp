@@ -453,6 +453,7 @@ void battlingPhase(){
                 // Used switch case incase more effects get added
                 switch(playerCard[1]){
                     case 'h':
+                        // Prevents the player from healing past their max hp
                         player.hp = min(player.hp + playerCardVal, player.maxHp);
                         cout << "Player is healed for " << to_string(playerCardVal) << " HP!\n";
                         break;
@@ -463,10 +464,10 @@ void battlingPhase(){
                 }
                 break;
             case 'l':
-                // Used switch case incase more effects get added
                 switch(enemyCard[1]){
                     case 'h':
-                        enemy.hp += enemyCardVal;
+                        // Prevents the enemy from healing past their max hp
+                        enemy.hp = min(enemy.hp + enemyCardVal, enemy.maxHp);
                         cout << "Enemy is healed for " << to_string(enemyCardVal) << " HP!\n";
                         break;
                     case 'n':
@@ -480,7 +481,6 @@ void battlingPhase(){
                 if(playerCardVal == enemyCardVal){
                     cout << "It's a draw!\n";
                 } else if (playerCardVal > enemyCardVal){
-                    // Used switch case incase more effects get added
                     switch(playerCard[1]){
                         case 'h':
                             player.hp = min(player.hp + playerCardVal, player.maxHp);
@@ -492,10 +492,9 @@ void battlingPhase(){
                             break;
                     }
                 } else {
-                    // Used switch case incase more effects get added
                     switch(enemyCard[1]){
                         case 'h':
-                            enemy.hp += enemyCardVal;
+                            enemy.hp = min(enemy.hp + enemyCardVal, enemy.maxHp);
                             cout << "Enemy is healed for " << to_string(enemyCardVal) << " HP!\n";
                             break;
                         case 'n':
@@ -671,7 +670,7 @@ void shoppingPhase(){
                 player.gold -= hpPrice;
                 game.hpItemsBought += 1;
 
-                cout << "Player is back at full health!";
+                cout << "Player is back at full health!" << endl;
                 pressToContinue();;
             } else {
                 cout << "Not enough gold!\n";
