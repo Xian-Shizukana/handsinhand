@@ -69,9 +69,6 @@ int main(){
                     cout << "Exiting the game. Goodbye!" << endl;
                     return 0;
                 default:
-                    cout << "Invalid choice. Please try again." << endl;
-                    pressToContinue();
-                    clearScreen();
                     continue;
             }
             clearScreen();
@@ -235,6 +232,17 @@ int startingMenu(){
     cout << "3. Exit" << endl;
     cout << "Please enter your choice: ";
     cin >> choice;
+
+    // Shows an error if the choice isn't a number or outside of the
+    // range
+    if (cin.fail() || choice < 1 || choice > 3){
+        // cin.clear() fixes the error state of cin
+        cin.clear();
+        cout << "===============================" << endl;
+        cout << "Invalid input.\n";
+        pressToContinue();
+        return 4;
+    }
 
     return choice;
 }
