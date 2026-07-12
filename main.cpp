@@ -613,7 +613,7 @@ void shoppingPhase(){
 
         // Shows an error if the choice isn't a number or outside of the
         // deck range.
-        if (cin.fail() || choice < -2 || choice > 5){
+        if (cin.fail() || choice < -2 || choice > 6){
             // cin.clear() fixes the error state of cin
             cin.clear();
             cout << "Invalid input.\n";
