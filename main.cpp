@@ -1,3 +1,14 @@
+/*
+Hands in Hand
+
+By:
+Calaoagan, Sean Jefferson M.
+Cordero, Hexel A.
+Juanico, Joaquin Paul
+
+Note: Needs C++ 17 and above to work
+*/
+
 #include <iostream>
 #include <queue>
 #include <cstdlib>
@@ -95,6 +106,13 @@ int main(){
                         cout << "GAME OVER.\n";
                         cout << "Score: " << game.score << endl;
                         pressToContinue();
+
+                        // Clears out player deck, hand, and hand order
+                        player.deck.clear();
+                        player.hand.clear();
+                        while(!player.handOrder.empty()){
+                            player.handOrder.pop();
+                        }
 
                         isPlayerAlive = false;
                         eraseSaveFile();
@@ -226,7 +244,17 @@ void autoSave(){
 
 int startingMenu(){
     int choice;
-    cout << "HANDS IN HAND" << endl;
+
+    // R"()" is a raw string literal which disregards backslashes
+    cout << "\033[34m";
+    cout << R"(
+     _  _              _      _        _  _              _ 
+    | || |__ _ _ _  __| |___ (_)_ _   | || |__ _ _ _  __| |
+    | __ / _` | ' \/ _` (_-< | | ' \  | __ / _` | ' \/ _` |
+    |_||_\__,_|_||_\__,_/__/ |_|_||_| |_||_\__,_|_||_\__,_|                                                        
+    )" << endl;
+    cout << "\033[0m";
+
     cout << "1. Start New Game" << endl;
     cout << "2. Load Game" << endl;
     cout << "3. Exit" << endl;
