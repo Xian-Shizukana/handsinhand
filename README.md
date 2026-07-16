@@ -125,7 +125,6 @@ The save file contains:
 - Maximum HP
 - Gold
 - Deck
-- Current hand
 
 If the player dies, the save file is automatically deleted.
 
@@ -183,15 +182,11 @@ HandsInHand.exe
 
 Possible future additions include:
 
-- More card effects (poison, shield, stun, buffs)
-- Additional enemy AI behaviors
+- More card effects
 - Boss encounters
-- Multiple card rarities
 - Relics/passive abilities
 - Better save encryption
 - Improved UI
-- Sound effects
-- Cross-platform terminal compatibility
 
 ---
 
